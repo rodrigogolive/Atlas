@@ -4,6 +4,44 @@
 
 #include "scene.h"
 
+// ImageItem
+ImageItem::ImageItem(QPixmap *image)
+{
+    m_image = image;
+    m_pos = QPoint(0, 0);
+}
+ImageItem::~ImageItem()
+{
+    if (m_image)
+        delete m_image;
+}
+
+QPixmap *ImageItem::pixmap()
+{
+    return m_image;
+}
+
+QSize ImageItem::size() const
+{
+    if (m_image)
+        return QSize(0, 0);
+
+    return m_image->size();
+
+}
+
+QPoint ImageItem::pos() const
+{
+    return m_pos;
+}
+
+QRect ImageItem::rect() const
+{
+    return m_image->rect();
+}
+
+
+// Scene
 Scene::Scene()
     : QGraphicsScene()
     , m_currentSize(QSize(800, 800)) // XXX we need to change it as the user adds new images
@@ -22,6 +60,9 @@ Scene::Scene()
 
 Scene::~Scene()
 {
+    foreach (ImageItem *image, m_imageList) {
+        delete image;
+    }
 }
 
 void Scene::addImages(const QStringList files)
@@ -37,7 +78,8 @@ void Scene::addImages(const QStringList files)
         QPixmap *pixmap = new QPixmap(fileName);
         p.drawPixmap(0, 0, *pixmap); // XXX will use calculated positions to address correct pos
 
-        m_pixmapList.push_back(pixmap); // XXX really it will be on another structure soon
+        ImageItem *image = new ImageItem(pixmap);
+        m_imageList.push_back(image);
     }
     p.end();
 
@@ -73,8 +115,8 @@ void Scene::drawInfoLayer()
     pen.setWidth(3);
     p.setPen(pen);
 
-    foreach (QPixmap *pixmap, m_pixmapList) {
-        p.drawRect(pixmap->rect());
+    foreach (ImageItem *image, m_imageList) {
+        p.drawRect(image->rect());
     }
 
     p.end();
