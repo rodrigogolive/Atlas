@@ -16,6 +16,7 @@ public:
 
     QSize size() const;
     QPoint pos() const;
+    void setPos(const QPoint pos);
     QRect rect() const;
 
 private:

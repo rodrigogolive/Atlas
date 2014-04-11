@@ -3,6 +3,7 @@
 #include <QPainter>
 
 #include "scene.h"
+#include <QDebug>
 
 // ImageItem
 ImageItem::ImageItem(QPixmap *image)
@@ -23,7 +24,7 @@ QPixmap *ImageItem::pixmap()
 
 QSize ImageItem::size() const
 {
-    if (m_image)
+    if (!m_image)
         return QSize(0, 0);
 
     return m_image->size();
@@ -35,9 +36,14 @@ QPoint ImageItem::pos() const
     return m_pos;
 }
 
+void ImageItem::setPos(const QPoint pos)
+{
+    m_pos = pos;
+}
+
 QRect ImageItem::rect() const
 {
-    return m_image->rect();
+    return QRect(m_pos, size());
 }
 
 
@@ -73,12 +79,23 @@ void Scene::addImages(const QStringList files)
     QPixmap *layer = new QPixmap(m_currentSize);
     layer->fill(Qt::transparent);
 
+    // XXX split draw and insertion
     QPainter p(layer);
     foreach (QString fileName, files) {
         QPixmap *pixmap = new QPixmap(fileName);
-        p.drawPixmap(0, 0, *pixmap); // XXX will use calculated positions to address correct pos
+        QPoint newPos = QPoint(0, 0);
+
+        if (m_imageList.size() != 0) {
+            newPos = m_imageList[m_imageList.size() - 1]->pos() +
+                QPoint(pixmap->size().width(), 0);
+        }
+
+        p.drawPixmap(newPos, *pixmap); // XXX will use calculated positions to address correct pos
+        qDebug() << newPos;
 
         ImageItem *image = new ImageItem(pixmap);
+        qDebug() << image->rect();
+        image->setPos(newPos);
         m_imageList.push_back(image);
     }
     p.end();
